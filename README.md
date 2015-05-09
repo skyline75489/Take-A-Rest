@@ -1,6 +1,10 @@
 Take A Rest
 ===========
 
+Sometimes you just need to take a rest.
+
+![rest](http://sd.keepcalm-o-matic.co.uk/i/keep-calm-and-take-a-rest.png)
+
 ### Requirments
 
 * Python 2.7 / 3.4 with [schedule](https://github.com/dbader/schedule) installed
