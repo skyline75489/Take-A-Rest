@@ -3,7 +3,7 @@ Take A Rest
 
 Sometimes you just need to take a rest.
 
-![rest](http://sd.keepcalm-o-matic.co.uk/i/keep-calm-and-take-a-rest.png)
+![rest](function.png)
 
 ### Requirments
 
