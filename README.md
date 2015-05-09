@@ -3,7 +3,7 @@ Take A Rest
 
 ### Requirments
 
-* Python 2.7 with [schechle](https://github.com/dbader/schedule) installed
+* Python 2.7 / 3.4 with [schedule](https://github.com/dbader/schedule) installed
 
 ### Usage 
 
