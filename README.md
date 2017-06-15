@@ -8,7 +8,7 @@ Sometimes you just need to take a rest.
 ### Requirments
 
 * Mac OS X 10.9 + / Linux Desktop with `notify-send`
-* Python 2.7 / 3.4 with [schedule](https://github.com/dbader/schedule) installed
+* Python 3.4 with [schedule](https://github.com/dbader/schedule) installed
 
 ### Usage 
 
