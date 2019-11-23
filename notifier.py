@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import logging
 
-logger = logging.getLogger('notifier')
+logger = logging.getLogger("notifier")
 
 SYSTEM = platform.system()
 PY_MAIN_VERSION = int(platform.python_version_tuple()[0])
@@ -13,14 +13,21 @@ PYOBJC = False
 
 if PY_MAIN_VERSION < 3:
     import sys
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
 
-if SYSTEM == 'Darwin':
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
+
+if SYSTEM == "Darwin":
     try:
         import objc
-        from Foundation import NSDate, NSURL, NSUserNotification, NSUserNotificationCenter
+        from Foundation import (
+            NSDate,
+            NSURL,
+            NSUserNotification,
+            NSUserNotificationCenter,
+        )
         from AppKit import NSImage
+
         PYOBJC = True
 
         def swizzle(cls, SEL, func):
@@ -28,32 +35,45 @@ if SYSTEM == 'Darwin':
 
             def wrapper(self, *args, **kwargs):
                 return func(self, old_IMP, *args, **kwargs)
-            new_IMP = objc.selector(wrapper, selector=old_IMP.selector,
-                                    signature=old_IMP.signature)
+
+            new_IMP = objc.selector(
+                wrapper, selector=old_IMP.selector, signature=old_IMP.signature
+            )
             objc.classAddMethod(cls, SEL, new_IMP)
 
         def swizzled_bundleIdentifier(self, original):
             # Use iTunes icon for notification
-            return 'com.apple.itunes'
+            return "com.apple.itunes"
 
     except ImportError:
         PYOBJC = False
 
 
 class Notifier(object):
-
     def __init__(self):
         self.tempfile_dir = None
         self.notify = None
         self.bin_path = None
         self.notify_available = True
 
-        if SYSTEM == 'Darwin' and PYOBJC:
-            def _pyobjc_notify(message, title=None, subtitle=None, appIcon=None, contentImage=None, open_URL=None, delay=0, sound=False):
+        if SYSTEM == "Darwin" and PYOBJC:
 
-                swizzle(objc.lookUpClass('NSBundle'),
-                        b'bundleIdentifier',
-                        swizzled_bundleIdentifier)
+            def _pyobjc_notify(
+                message,
+                title=None,
+                subtitle=None,
+                appIcon=None,
+                contentImage=None,
+                open_URL=None,
+                delay=0,
+                sound=False,
+            ):
+
+                swizzle(
+                    objc.lookUpClass("NSBundle"),
+                    b"bundleIdentifier",
+                    swizzled_bundleIdentifier,
+                )
                 notification = NSUserNotification.alloc().init()
                 notification.setInformativeText_(message)
                 if title:
@@ -70,20 +90,20 @@ class Notifier(object):
                     notification.setContentImage_(image)
 
                 if sound:
-                    notification.setSoundName_(
-                        "NSUserNotificationDefaultSoundName")
+                    notification.setSoundName_("NSUserNotificationDefaultSoundName")
                 notification.setDeliveryDate_(
-                    NSDate.dateWithTimeInterval_sinceDate_(delay, NSDate.date()))
+                    NSDate.dateWithTimeInterval_sinceDate_(delay, NSDate.date())
+                )
                 NSUserNotificationCenter.defaultUserNotificationCenter().scheduleNotification_(
-                    notification)
+                    notification
+                )
 
             self.notify = _pyobjc_notify
         else:
             self.notify_available = False
 
         if SYSTEM == "Linux":
-            proc = subprocess.Popen(
-                ["which", "notify-send"], stdout=subprocess.PIPE)
+            proc = subprocess.Popen(["which", "notify-send"], stdout=subprocess.PIPE)
             env_bin_path = proc.communicate()[0].strip()
             if env_bin_path and os.path.exists(env_bin_path):
                 self.bin_path = os.path.realpath(env_bin_path)
@@ -103,37 +123,48 @@ class Notifier(object):
     def _notify_not_available(self, *args, **kwargs):
         pass
 
-    def _notify_send_notify(self, message, title=None, subtitle=None, appIcon=None, contentImage=None, open_URL=None, delay=0, sound=False):
+    def _notify_send_notify(
+        self,
+        message,
+        title=None,
+        subtitle=None,
+        appIcon=None,
+        contentImage=None,
+        open_URL=None,
+        delay=0,
+        sound=False,
+    ):
         # Download the image
         self.tempfile_dir = tempfile.mkdtemp()
 
         if appIcon:
-            subprocess.Popen([
-            'curl',
-            '-o',
-            self.tempfile_dir + '/' + str(title.__hash__()) + '.jpg',
-            appIcon],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            subprocess.Popen(
+                [
+                    "curl",
+                    "-o",
+                    self.tempfile_dir + "/" + str(title.__hash__()) + ".jpg",
+                    appIcon,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
 
         import time
+
         time.sleep(0.5)
 
         process_args = []
         process_args.append(self.bin_path)
         if appIcon:
-            process_args.append('-i')
-            process_args.append(self.tempfile_dir, + '/' + str(title.__hash__()) + '.jpg')
+            process_args.append("-i")
+            process_args.append(
+                self.tempfile_dir, +"/" + str(title.__hash__()) + ".jpg"
+            )
         process_args.append(title)
         if message:
             process_args.append(message)
 
-        subprocess.Popen(
-            process_args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
-        )
+        subprocess.Popen(process_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 
 Notifier = Notifier()
