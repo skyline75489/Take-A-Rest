@@ -3,6 +3,9 @@ import os
 import platform
 import subprocess
 import tempfile
+import logging
+
+logger = logging.getLogger('notifier')
 
 SYSTEM = platform.system()
 PY_MAIN_VERSION = int(platform.python_version_tuple()[0])
@@ -94,7 +97,7 @@ class Notifier(object):
                 self.notify_available = False
 
         if not self.notify_available:
-            print("Notify not available.")
+            logger.error("Notify not available.")
             self.notify = self._notify_not_available
 
     def _notify_not_available(self, *args, **kwargs):
@@ -103,24 +106,31 @@ class Notifier(object):
     def _notify_send_notify(self, message, title=None, subtitle=None, appIcon=None, contentImage=None, open_URL=None, delay=0, sound=False):
         # Download the image
         self.tempfile_dir = tempfile.mkdtemp()
-        subprocess.Popen([
+
+        if appIcon:
+            subprocess.Popen([
             'curl',
             '-o',
             self.tempfile_dir + '/' + str(title.__hash__()) + '.jpg',
             appIcon],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
-        )
+            )
 
         import time
         time.sleep(0.5)
 
-        subprocess.Popen([
-            self.bin_path,
-            '-i',
-            self.tempfile_dir + '/' + str(title.__hash__()) + '.jpg',
-            title,
-            subtitle],
+        process_args = []
+        process_args.append(self.bin_path)
+        if appIcon:
+            process_args.append('-i')
+            process_args.append(self.tempfile_dir, + '/' + str(title.__hash__()) + '.jpg')
+        process_args.append(title)
+        if message:
+            process_args.append(message)
+
+        subprocess.Popen(
+            process_args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
