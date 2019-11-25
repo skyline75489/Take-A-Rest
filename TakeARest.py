@@ -29,7 +29,7 @@ def do_notify(work=45, rest=5):
     )
     logger.info("Rest: " + get_current_time())
     time.sleep(rest * 60)
-    Notifier.notify("Rest is over. Time to work!")
+    Notifier.notify("Rest is over", "Time to work!")
     logger.info("Back: " + get_current_time())
 
 
